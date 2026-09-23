@@ -4,6 +4,7 @@ import cors from "cors";
 
 import connectDatabase from "./config/database.js";
 import authRoutes from "./routes/auth.routes.js";
+import seedTemplates from "./seeds/template.seed.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,6 +23,7 @@ app.get("/api/health", (_req, res) => {
 
 const startServer = async (): Promise<void> => {
   await connectDatabase();
+  await seedTemplates();
 
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
