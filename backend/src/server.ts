@@ -6,6 +6,8 @@ import connectDatabase from "./config/database.js";
 import authRoutes from "./routes/auth.routes.js";
 import seedTemplates from "./seeds/template.seed.js";
 import templateRoutes from "./routes/template.routes.js";
+import "./config/cloudinary.js";
+import uploadRoutes from "./routes/upload.routes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,6 +17,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/templates", templateRoutes);
+app.use("/api/upload", uploadRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({
