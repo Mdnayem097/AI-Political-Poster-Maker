@@ -356,3 +356,100 @@ export const regeneratePosterHandler = async (
     });
   }
 };
+
+export const getMyPosters = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+
+      return;
+    }
+
+    const posters = await Poster.find({ userId })
+      .sort({ createdAt: -1 })
+      .populate("templateId", "title occasionType thumbnailUrl");
+
+    res.status(200).json({
+      success: true,
+      count: posters.length,
+      data: posters,
+    });
+  } catch (error) {
+    console.error("Get my posters error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong while fetching posters",
+    });
+  }
+};
+
+export const deletePoster = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    const { id } = req.params;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+
+      return;
+    }
+
+    if (!isValidObjectId(id)) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid poster id",
+      });
+
+      return;
+    }
+
+    const poster = await Poster.findOne({ _id: id, userId });
+
+    if (!poster) {
+      res.status(404).json({
+        success: false,
+        message: "Poster not found",
+      });
+
+      return;
+    }
+
+    if (poster.status === "generating" && !isGenerationStuck(poster)) {
+      res.status(409).json({
+        success: false,
+        message: "Poster is being generated, please try again later",
+      });
+
+      return;
+    }
+
+    await poster.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: "Poster deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete poster error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong while deleting poster",
+    });
+  }
+};
