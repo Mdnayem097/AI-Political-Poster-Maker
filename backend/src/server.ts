@@ -9,6 +9,8 @@ import templateRoutes from "./routes/template.routes.js";
 import "./config/cloudinary.js";
 import uploadRoutes from "./routes/upload.routes.js";
 import posterRoutes from "./routes/poster.routes.js";
+import geminiTestRoutes from "./routes/gemini-test.routes.js";
+import rendererTestRoutes from "./routes/renderer-test.routes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,6 +22,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/templates", templateRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/posters", posterRoutes);
+app.use("/api/gemini-test", geminiTestRoutes);
+app.use("/api/renderer-test", rendererTestRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({

@@ -15,6 +15,15 @@ interface PosterRenderInput {
   layout: LayoutSuggestion;
 }
 
+// Stops user text from breaking (or injecting into) the poster HTML
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
 export const renderPoster = async (
   input: PosterRenderInput,
 ): Promise<string> => {
@@ -29,32 +38,29 @@ export const renderPoster = async (
       deviceScaleFactor: 1,
     });
 
-    const {
-      name,
-      designation,
-      partyOrOrganization,
-      unionThanaDistrict,
-      occasion,
-      headline,
-      photoUrls,
-      layout,
-    } = input;
+    const { photoUrls, layout } = input;
+    const { primaryColor, secondaryColor } = layout;
 
-    const background =
+    const name = escapeHtml(input.name);
+    const designation = escapeHtml(input.designation);
+    const organization = escapeHtml(input.partyOrOrganization);
+    const location = escapeHtml(input.unionThanaDistrict);
+    const occasion = escapeHtml(input.occasion);
+    const headline = escapeHtml(input.headline);
+
+    // "gradient" adds a soft tint of the secondary color in one corner
+    const tint =
       layout.background === "gradient"
-        ? `linear-gradient(135deg, ${layout.primaryColor}, ${layout.secondaryColor})`
-        : layout.primaryColor;
+        ? `radial-gradient(circle at 100% 100%, ${secondaryColor} 0%, transparent 60%),`
+        : "";
 
-    const photoHtml = photoUrls
-      .slice(0, 3)
+    const photos = photoUrls.slice(0, 3);
+
+    const photoHtml = photos
       .map(
         (url) => `
-          <div class="photo-wrapper">
-            <img
-              src="${url}"
-              alt="Poster photo"
-              class="poster-photo"
-            />
+          <div class="photo">
+            <img src="${escapeHtml(url)}" alt="Poster photo" />
           </div>
         `,
       )
@@ -77,121 +83,167 @@ export const renderPoster = async (
               padding: 0;
               width: 1200px;
               height: 1600px;
-              font-family: Arial, "Noto Sans Bengali", sans-serif;
+              font-family: "Noto Sans Bengali", Arial, sans-serif;
             }
 
             body {
-              background: ${background};
+              background: ${tint} ${primaryColor};
             }
 
             .poster {
               position: relative;
               width: 1200px;
               height: 1600px;
-              padding: 80px;
-              color: white;
-              overflow: hidden;
-              text-align: ${layout.textAlignment};
-            }
-
-            .border {
-              position: absolute;
-              inset: 35px;
-              border: 3px solid rgba(255, 255, 255, 0.65);
-              pointer-events: none;
-            }
-
-            .content {
-              position: relative;
-              z-index: 2;
-              height: 100%;
               display: flex;
               flex-direction: column;
-              justify-content: space-between;
-              align-items: center;
+              overflow: hidden;
+              color: #ffffff;
+              text-align: center;
+            }
+
+            /* Background decoration */
+            .shade {
+              position: absolute;
+              inset: 0;
+              background: linear-gradient(
+                180deg,
+                rgba(0, 0, 0, 0) 40%,
+                rgba(0, 0, 0, 0.45) 100%
+              );
+            }
+
+            .pattern {
+              position: absolute;
+              inset: 0;
+              background: repeating-linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0.04) 0 2px,
+                transparent 2px 24px
+              );
+            }
+
+            .sun {
+              position: absolute;
+              top: 400px;
+              left: 160px;
+              width: 880px;
+              height: 880px;
+              border-radius: 50%;
+              background: ${secondaryColor};
+              box-shadow:
+                0 0 0 36px rgba(255, 255, 255, 0.1),
+                0 0 0 72px rgba(255, 255, 255, 0.05);
+            }
+
+            .frame {
+              position: absolute;
+              inset: 28px;
+              border: 4px solid rgba(255, 255, 255, 0.85);
+            }
+
+            .frame-inner {
+              position: absolute;
+              inset: 44px;
+              border: 1px solid rgba(255, 255, 255, 0.5);
+            }
+
+            /* Top: occasion + headline */
+            .header {
+              position: relative;
+              padding: 90px 90px 0;
             }
 
             .occasion {
+              display: inline-block;
+              padding: 12px 44px;
+              border-radius: 999px;
+              border: 3px solid #ffffff;
+              background: ${secondaryColor};
               font-size: 38px;
               font-weight: 700;
-              letter-spacing: 1px;
-              opacity: 0.95;
             }
 
             .headline {
-              margin-top: 40px;
-              font-size: 72px;
-              line-height: 1.2;
+              margin-top: 36px;
+              font-size: 84px;
+              line-height: 1.25;
               font-weight: 800;
+              text-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
             }
 
+            /* Middle: photos */
             .photos {
+              position: relative;
+              flex: 1;
               display: flex;
               justify-content: center;
               align-items: center;
-              gap: 24px;
-              margin: 50px 0;
+              gap: 20px;
+              padding: 0 80px;
             }
 
-            .photo-wrapper {
-              width: 240px;
-              height: 240px;
-              flex: 0 0 240px;
-
-              border-radius: 50%;
+            .photo {
+              border: 8px solid #ffffff;
+              border-radius: 24px;
               overflow: hidden;
-
-              border: 6px solid rgba(255, 255, 255, 0.9);
-              box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
-
-              background: transparent;
+              background: #ffffff;
+              box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
             }
 
-            .poster-photo {
+            .photo img {
               display: block;
-
               width: 100%;
               height: 100%;
-
               object-fit: cover;
-              object-position: center;
+              object-position: center top;
+            }
 
-              border: 0;
-              margin: 0;
-              padding: 0;
+            .photos-1 .photo {
+              width: 640px;
+              height: 760px;
+            }
+
+            .photos-2 .photo {
+              width: 500px;
+              height: 640px;
+            }
+
+            .photos-3 .photo {
+              width: 300px;
+              height: 400px;
+            }
+
+            .photos-3 .photo:nth-child(2) {
+              width: 400px;
+              height: 520px;
+            }
+
+            /* Bottom: person info + credit line */
+            .info {
+              position: relative;
+              margin: 0 60px 60px;
+              padding: 30px 40px 26px;
+              border: 3px solid rgba(255, 255, 255, 0.7);
+              border-radius: 16px;
+              background: rgba(0, 0, 0, 0.5);
             }
 
             .name {
-              font-size: 58px;
+              font-size: 64px;
               font-weight: 800;
-              margin-top: 30px;
             }
 
             .designation {
-              margin-top: 16px;
-              font-size: 36px;
+              margin-top: 10px;
+              font-size: 38px;
               opacity: 0.95;
             }
 
-            .organization {
-              margin-top: 14px;
-              font-size: 32px;
-              opacity: 0.9;
-            }
-
-            .location {
-              margin-top: 12px;
+            .credit {
+              margin-top: 20px;
+              padding-top: 18px;
+              border-top: 2px solid rgba(255, 255, 255, 0.4);
               font-size: 30px;
-              opacity: 0.85;
-            }
-
-            .decoration {
-              position: absolute;
-              left: 0;
-              right: 0;
-              bottom: 90px;
-              height: 8px;
-              background: ${layout.secondaryColor};
               opacity: 0.9;
             }
           </style>
@@ -199,40 +251,26 @@ export const renderPoster = async (
 
         <body>
           <div class="poster">
+            <div class="shade"></div>
+            <div class="pattern"></div>
+            <div class="sun"></div>
+            <div class="frame"></div>
+            <div class="frame-inner"></div>
 
-            <div class="border"></div>
-
-            <div class="content">
-
-              <div>
-                <div class="occasion">${occasion}</div>
-                <div class="headline">${headline}</div>
-              </div>
-
-              <div>
-                <div class="photos">
-                  ${photoHtml}
-                </div>
-
-                <div class="name">${name}</div>
-
-                <div class="designation">
-                  ${designation}
-                </div>
-
-                <div class="organization">
-                  ${partyOrOrganization}
-                </div>
-
-                <div class="location">
-                  ${unionThanaDistrict}
-                </div>
-              </div>
-
+            <div class="header">
+              <div class="occasion">${occasion}</div>
+              <div class="headline">${headline}</div>
             </div>
 
-            <div class="decoration"></div>
+            <div class="photos photos-${photos.length}">
+              ${photoHtml}
+            </div>
 
+            <div class="info">
+              <div class="name">${name}</div>
+              <div class="designation">${designation}</div>
+              <div class="credit">প্রচারে: ${organization}, ${location}</div>
+            </div>
           </div>
         </body>
       </html>
