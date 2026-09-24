@@ -27,6 +27,60 @@ const isGenerationStuck = (poster: {
   poster.status === "generating" &&
   Date.now() - poster.updatedAt.getTime() > GENERATION_TIMEOUT_MS;
 
+// Keeps the text short enough to fit on the poster
+const MAX_LENGTHS = {
+  name: 40,
+  designation: 50,
+  partyOrOrganization: 60,
+  unionThanaDistrict: 60,
+  occasion: 40,
+  headline: 50,
+} as const;
+
+const MAX_PHOTOS = 3;
+
+// Returns an error message, or null when everything is fine.
+// Fields that are not sent are skipped, so this works for regenerate too.
+const validateTextFields = (body: Record<string, unknown>): string | null => {
+  for (const [field, maxLength] of Object.entries(MAX_LENGTHS)) {
+    const value = body[field];
+
+    if (value === undefined) {
+      continue;
+    }
+
+    if (typeof value !== "string") {
+      return `${field} must be text`;
+    }
+
+    if (value.trim().length > maxLength) {
+      return `${field} must be at most ${maxLength} characters`;
+    }
+  }
+
+  return null;
+};
+
+const validatePhotoUrls = (urls: unknown): string | null => {
+  if (urls === undefined) {
+    return null;
+  }
+
+  if (!Array.isArray(urls)) {
+    return "uploadedPhotoUrls must be a list";
+  }
+
+  if (urls.length > MAX_PHOTOS) {
+    return `At most ${MAX_PHOTOS} photos are allowed`;
+  }
+
+  const allHttps = urls.every(
+    (url) => typeof url === "string" && url.startsWith("https://"),
+  );
+
+  return allHttps ? null : "Every photo must be an https link";
+};
+
 export const createPoster = async (
   req: Request,
   res: Response,
@@ -66,6 +120,27 @@ export const createPoster = async (
       res.status(400).json({
         success: false,
         message: "All required poster fields must be provided",
+      });
+
+      return;
+    }
+
+    const validationError =
+      validateTextFields(req.body) ?? validatePhotoUrls(uploadedPhotoUrls);
+
+    if (validationError) {
+      res.status(400).json({
+        success: false,
+        message: validationError,
+      });
+
+      return;
+    }
+
+    if (typeof templateId !== "string" || !isValidObjectId(templateId)) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid template id",
       });
 
       return;
@@ -182,16 +257,15 @@ export const generatePosterHandler = async (
       console.error("Poster generation error:", error);
     });
 
-    res.status(200).json({
+    res.status(202).json({
       success: true,
+      message: "Poster generation started",
       data: {
-        ...poster.toObject(),
-        regenerationsLeft: Math.max(
-          MAX_REGENERATIONS - poster.regenerateCount,
-          0,
-        ),
+        id: poster.id,
+        status: poster.status,
       },
     });
+    getPosterById;
   } catch (error) {
     console.error("Generate poster error:", error);
 
@@ -244,7 +318,13 @@ export const getPosterById = async (
 
     res.status(200).json({
       success: true,
-      data: poster,
+      data: {
+        ...poster.toObject(),
+        regenerationsLeft: Math.max(
+          MAX_REGENERATIONS - poster.regenerateCount,
+          0,
+        ),
+      },
     });
   } catch (error) {
     console.error("Get poster error:", error);
@@ -321,8 +401,20 @@ export const regeneratePosterHandler = async (
     }
 
     // Optional: the user can tweak the text before regenerating
+    const body = req.body ?? {};
+    const validationError = validateTextFields(body);
+
+    if (validationError) {
+      res.status(400).json({
+        success: false,
+        message: validationError,
+      });
+
+      return;
+    }
+
     for (const field of EDITABLE_FIELDS) {
-      const value = req.body[field];
+      const value = body[field];
 
       if (typeof value === "string" && value.trim()) {
         poster.formData[field] = value.trim();
