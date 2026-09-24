@@ -34,6 +34,7 @@ export const generatePoster = async (posterId: string): Promise<void> => {
       designation: poster.formData.designation,
       occasion: poster.formData.occasion,
       headline: poster.formData.headline,
+      attempt: poster.regenerateCount,
     });
 
     // 2. Render the poster PNG with Puppeteer
