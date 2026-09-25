@@ -1,16 +1,44 @@
 import type { Request, Response } from "express";
+
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
+
+const isText = (value: unknown): value is string => typeof value === "string";
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
+    if (
+      !isText(name) ||
+      !isText(email) ||
+      !isText(password) ||
+      !name.trim() ||
+      !email.trim() ||
+      !password
+    ) {
       res.status(400).json({
         success: false,
         message: "Name, email and password are required",
+      });
+
+      return;
+    }
+
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      res.status(400).json({
+        success: false,
+        message: "Please enter a valid email",
+      });
+
+      return;
+    }
+
+    if (password.length < 6) {
+      res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters",
       });
 
       return;
@@ -59,7 +87,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
+    if (!isText(email) || !isText(password) || !email || !password) {
       res.status(400).json({
         success: false,
         message: "Email and password are required",
