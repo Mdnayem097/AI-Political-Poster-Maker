@@ -1,6 +1,11 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 
 import { getToken, removeToken } from "@/lib/api";
 
@@ -17,13 +22,24 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+const subscribe = () => () => { };
+
+const getClientToken = () => getToken();
+
+const getServerToken = () => null;
+
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [token, setToken] = useState<string | null>(() => getToken());
-  const [isLoading] = useState(false);
+  const token = useSyncExternalStore(
+    subscribe,
+    getClientToken,
+    getServerToken,
+  );
+
+  const isLoading = false;
 
   function logout() {
     removeToken();
-    setToken(null);
+    window.location.reload();
   }
 
   return (
