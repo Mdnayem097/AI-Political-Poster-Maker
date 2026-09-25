@@ -30,6 +30,13 @@ export const generatePoster = async (posterId: string): Promise<void> => {
     const layout = await generateLayoutSuggestion({
       templateTitle: template.title,
       occasionType: template.occasionType,
+      templateLayout: template.layoutConfig as {
+        background: string;
+        primaryColor: string;
+        secondaryColor: string;
+        textAlignment: "left" | "center" | "right";
+        photoPosition: "left" | "center" | "right" | "bottom";
+      },
       name: poster.formData.name,
       designation: poster.formData.designation,
       occasion: poster.formData.occasion,

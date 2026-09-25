@@ -39,7 +39,14 @@ export const renderPoster = async (
     });
 
     const { photoUrls, layout } = input;
-    const { primaryColor, secondaryColor } = layout;
+    const {
+      primaryColor,
+      secondaryColor,
+      textAlignment,
+      photoPosition,
+      decoration,
+      variant,
+    } = layout;
 
     const name = escapeHtml(input.name);
     const designation = escapeHtml(input.designation);
@@ -47,6 +54,32 @@ export const renderPoster = async (
     const location = escapeHtml(input.unionThanaDistrict);
     const occasion = escapeHtml(input.occasion);
     const headline = escapeHtml(input.headline);
+
+    const variantStyles = [
+      {
+        sunTop: 400,
+        sunLeft: 160,
+        sunSize: 880,
+        frameWidth: 4,
+        frameRadius: 0,
+      },
+      {
+        sunTop: 300,
+        sunLeft: 420,
+        sunSize: 700,
+        frameWidth: 8,
+        frameRadius: 28,
+      },
+      {
+        sunTop: 520,
+        sunLeft: 40,
+        sunSize: 1000,
+        frameWidth: 3,
+        frameRadius: 60,
+      },
+    ] as const;
+
+    const currentVariant = variantStyles[variant];
 
     // "gradient" adds a soft tint of the secondary color in one corner
     const tint =
@@ -98,7 +131,7 @@ export const renderPoster = async (
               flex-direction: column;
               overflow: hidden;
               color: #ffffff;
-              text-align: center;
+              text-align: ${textAlignment};
             }
 
             /* Background decoration */
@@ -122,24 +155,26 @@ export const renderPoster = async (
               );
             }
 
-            .sun {
-              position: absolute;
-              top: 400px;
-              left: 160px;
-              width: 880px;
-              height: 880px;
-              border-radius: 50%;
-              background: ${secondaryColor};
-              box-shadow:
-                0 0 0 36px rgba(255, 255, 255, 0.1),
-                0 0 0 72px rgba(255, 255, 255, 0.05);
-            }
+  .sun {
+  position: absolute;
+  top: ${currentVariant.sunTop}px;
+  left: ${currentVariant.sunLeft}px;
+  width: ${currentVariant.sunSize}px;
+  height: ${currentVariant.sunSize}px;
+  border-radius: 50%;
+  background: ${secondaryColor};
+  box-shadow:
+    0 0 0 36px rgba(255, 255, 255, 0.1),
+    0 0 0 72px rgba(255, 255, 255, 0.05);
+}
 
-            .frame {
-              position: absolute;
-              inset: 28px;
-              border: 4px solid rgba(255, 255, 255, 0.85);
-            }
+.frame {
+  position: absolute;
+  inset: 28px;
+  border: ${currentVariant.frameWidth}px solid rgba(255, 255, 255, 0.85);
+  border-radius: ${currentVariant.frameRadius}px;
+}
+
 
             .frame-inner {
               position: absolute;
@@ -173,14 +208,20 @@ export const renderPoster = async (
 
             /* Middle: photos */
             .photos {
-              position: relative;
-              flex: 1;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              gap: 20px;
-              padding: 0 80px;
-            }
+  position: relative;
+  flex: 1;
+  display: flex;
+  justify-content: ${photoPosition === "left"
+        ? "flex-start"
+        : photoPosition === "right"
+          ? "flex-end"
+          : "center"
+      };
+  align-items: ${photoPosition === "bottom" ? "flex-end" : "center"
+      };
+  gap: 20px;
+  padding: 0 80px;
+}
 
             .photo {
               border: 8px solid #ffffff;

@@ -4,7 +4,7 @@ const templates = [
   {
     title: "Classic Political",
     occasionType: "General",
-    thumbnailUrl: "https://placehold.co/600x800/png",
+    thumbnailUrl: "/templates/classic-political.svg",
     layoutConfig: {
       background: "gradient",
       primaryColor: "#0F172A",
@@ -17,7 +17,7 @@ const templates = [
   {
     title: "National Occasion",
     occasionType: "National",
-    thumbnailUrl: "https://placehold.co/600x800/png",
+    thumbnailUrl: "/templates/national-occasion.svg",
     layoutConfig: {
       background: "solid",
       primaryColor: "#166534",
@@ -30,7 +30,7 @@ const templates = [
   {
     title: "Modern Campaign",
     occasionType: "Campaign",
-    thumbnailUrl: "https://placehold.co/600x800/png",
+    thumbnailUrl: "/templates/modern-campaign.svg",
     layoutConfig: {
       background: "gradient",
       primaryColor: "#1E293B",
@@ -44,16 +44,22 @@ const templates = [
 
 const seedTemplates = async (): Promise<void> => {
   try {
-    const existingTemplates = await Template.countDocuments();
-
-    if (existingTemplates > 0) {
-      console.log("Templates already exist. Skipping seed.");
-      return;
+    for (const template of templates) {
+      await Template.updateOne(
+        { title: template.title },
+        {
+          $set: {
+            occasionType: template.occasionType,
+            thumbnailUrl: template.thumbnailUrl,
+            layoutConfig: template.layoutConfig,
+            isActive: template.isActive,
+          },
+        },
+        { upsert: true },
+      );
     }
 
-    await Template.insertMany(templates);
-
-    console.log("Template seed data inserted successfully");
+    console.log("Template seed data updated successfully");
   } catch (error) {
     console.error("Template seed failed:", error);
   }
