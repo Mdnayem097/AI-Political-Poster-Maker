@@ -36,3 +36,10 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+# Project dependencies and generated files
+/frontend/node_modules/
+/frontend/.next/
+/backend/node_modules/
+/backend/dist/
+/backend/tmp/
+/frontend/.git-backup/

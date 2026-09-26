@@ -14,7 +14,6 @@ interface LayoutSuggestionInput {
   designation: string;
   occasion: string;
   headline: string;
-  // 0 for the first generation, then 1, 2 for each regeneration
   attempt: number;
 }
 
