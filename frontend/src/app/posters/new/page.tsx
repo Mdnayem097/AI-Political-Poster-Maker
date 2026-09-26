@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import Navbar from "@/components/Navbar";
@@ -17,9 +16,8 @@ interface UploadedPhoto {
     error?: string;
 }
 
-export default function CreatePosterPage() {
-    const searchParams = useSearchParams();
-    const templateId = searchParams.get("templateId");
+export default function CreatePosterContent() {
+    const [templateId, setTemplateId] = useState<string | null>(null);
 
     const [template, setTemplate] = useState<Template | null>(null);
     const [loadingTemplate, setLoadingTemplate] = useState(true);
@@ -49,6 +47,11 @@ export default function CreatePosterPage() {
     const [regenerationsLeft, setRegenerationsLeft] = useState<number | null>(
         null,
     );
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        setTemplateId(params.get("templateId"));
+    }, []);
 
     useEffect(() => {
         if (!templateId) {
