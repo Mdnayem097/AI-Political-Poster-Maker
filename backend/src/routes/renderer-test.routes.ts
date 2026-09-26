@@ -23,6 +23,7 @@ router.get("/", async (_req, res) => {
         textAlignment: "center",
         photoPosition: "center",
         decoration: "Thin gold border with subtle horizontal accent lines",
+        variant: 0,
       },
     });
 
