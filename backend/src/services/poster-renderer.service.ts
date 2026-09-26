@@ -4,6 +4,26 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { LayoutSuggestion } from "./gemini.service.js";
 
+const regularFontPath = path.join(
+  process.cwd(),
+  "fonts",
+  "NotoSansBengali-Regular.ttf",
+);
+
+const boldFontPath = path.join(
+  process.cwd(),
+  "fonts",
+  "NotoSansBengali-Bold.ttf",
+);
+
+const regularFontBase64 = (
+  await fs.readFile(regularFontPath)
+).toString("base64");
+
+const boldFontBase64 = (
+  await fs.readFile(boldFontPath)
+).toString("base64");
+
 interface PosterRenderInput {
   name: string;
   designation: string;
@@ -106,6 +126,17 @@ export const renderPoster = async (
           <meta charset="UTF-8" />
 
           <style>
+          @font-face {
+    font-family: "Noto Sans Bengali";
+    src: url("data:font/ttf;base64,${regularFontBase64}") format("truetype");
+    font-weight: 400;
+  }
+
+  @font-face {
+    font-family: "Noto Sans Bengali";
+    src: url("data:font/ttf;base64,${boldFontBase64}") format("truetype");
+    font-weight: 700 900;
+  }
             * {
               box-sizing: border-box;
             }
